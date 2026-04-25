@@ -1,0 +1,5 @@
+agent_name: "{{AGENT_NAME}}"
+domain: "agent domain"
+trigger: "on-demand"
+required_skills: []
+required_processors: []
