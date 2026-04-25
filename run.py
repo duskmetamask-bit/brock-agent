@@ -4,6 +4,8 @@ Entry point: python run.py [command] [args]
 
 Commands:
   build [name] [brief-json]  — build an agent from brief
+  assess [agent-dir]          — assess an existing agent, run gap analysis
+  fix [agent-dir]             — assess then patch all patchable gaps
   research [domain]          — run Phase 0 research for a domain
   docs [agent-name]          — generate README/API/USAGE docs
   monitor                    — show BROCK dashboard
@@ -14,10 +16,11 @@ Commands:
   template [template] [name] — instantiate from template
 
 Usage:
-  python3 run.py build PRISM '{"domain": "content intelligence", "voice_direction": "sharp"}'
+  python3 run.py build PRISM '{"domain": "content intelligence"}'
+  python3 run.py assess ~/.hermes/agents/PRISM
+  python3 run.py fix ~/.hermes/agents/prism
   python3 run.py research "voice agent"
   python3 run.py docs PRISM
-  python3 run.py monitor
 """
 
 import sys
@@ -293,6 +296,43 @@ def cmd_monitor():
     print(format_dashboard(stats))
 
 
+def cmd_assess(agent_path: str):
+    """Run gap analysis on an existing agent."""
+    from processors.assessor import assess_agent, format_assessment
+    from pathlib import Path
+    path = Path(agent_path).expanduser()
+    if not path.exists():
+        print(f"[-] Agent directory not found: {path}")
+        sys.exit(1)
+    print(f"[*] Assessing: {path.name}")
+    result = assess_agent(path)
+    print(format_assessment(result))
+
+
+def cmd_fix(agent_path: str):
+    """Assess then patch all patchable gaps in an existing agent."""
+    from processors.assessor import assess_agent, format_assessment
+    from processors.fixer import fix_agent, format_fix_report
+    from pathlib import Path
+    path = Path(agent_path).expanduser()
+    if not path.exists():
+        print(f"[-] Agent directory not found: {path}")
+        sys.exit(1)
+    print(f"[*] Assessing: {path.name}")
+    assessment = assess_agent(path)
+    print(format_assessment(assessment))
+    print(f"\n[*] Applying fixes...")
+    fix_report = fix_agent(path, assessment)
+    print(format_fix_report(fix_report))
+    print(f"\n[*] Re-assessing after fix...")
+    reassessment = assess_agent(path)
+    print(f"    New score: {reassessment['overall_score']}%")
+    if reassessment['overall_score'] >= 80:
+        print(f"    ✅ Agent is production-ready")
+    else:
+        print(f"    ⚠️  {len(reassessment['gates_failed'])} gaps remain — manual review needed")
+
+
 def cmd_intel():
     """Show BROCK intelligence summary."""
     from processors.self_improver import SelfImprover
@@ -406,6 +446,18 @@ def main():
 
     elif cmd == "monitor":
         cmd_monitor()
+
+    elif cmd == "assess":
+        if len(sys.argv) < 3:
+            print("Usage: python run.py assess [agent-dir]")
+            sys.exit(1)
+        cmd_assess(sys.argv[2])
+
+    elif cmd == "fix":
+        if len(sys.argv) < 3:
+            print("Usage: python run.py fix [agent-dir]")
+            sys.exit(1)
+        cmd_fix(sys.argv[2])
 
     elif cmd == "intel":
         cmd_intel()

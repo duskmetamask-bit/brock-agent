@@ -209,4 +209,33 @@ Update this skill with improvements after each build.
 
 ---
 
+## Pitfalls
+
+1. **Deep research is skipped under time pressure** — always do it. Skipping research means copying bad patterns.
+2. **Processor files grow too large** — if a processor is >300 lines, split it. Each processor does one thing.
+3. **Skills are an afterthought** — write skills first, processors second. Domain knowledge drives the architecture.
+4. **run.py is written last** — it's the entry point but it should be designed alongside the SOUL, not bolted on.
+5. **judge.py gates are relaxed to pass a failing build** — if it fails, fix the agent, don't lower the bar.
+6. **Pattern mismatch** — forcing a content-agent pattern onto an audit-agent because it's faster. Patterns exist to enforce quality, not convenience.
+7. **Testing with only happy paths** — judge.py must test both valid and invalid inputs.
+
+---
+
+## Verification
+
+To verify a build was done correctly:
+
+1. **Import chain:** `cd ~/.hermes/agents/[agent] && python3 -c "from processors import *; from agents import *"` — must not error
+2. **run.py --help:** `python3 run.py` with no args should print the docstring help
+3. **Skills exist and are non-empty:** `ls skills/*.md` should return 1+ files, each >200 chars
+4. **SOUL.md has all required sections:** grep for Identity, Core Responsibilities, Key Rules, Memory & Tool Conventions, Session Startup
+5. **SPEC.md exists:** `test -f SPEC.md && echo "exists"`
+6. **judge.py runs clean:** `python3 agents/judge.py [agent-name]` — 18/20 minimum, 20/20 target
+7. **Database initialises:** `sqlite3 database/[agent].db < database/schema.sql && echo "schema valid"`
+8. **Config is valid YAML:** `python3 -c "import yaml; yaml.safe_load(open('config/agent.yaml'))"`
+
+If any verification step fails, fix the agent before delivery.
+
+---
+
 *BROCK loads this skill at startup. Update when build methodology evolves.*
