@@ -1,14 +1,16 @@
 # BROCK — SPEC.md
-**Agent:** BROCK (Agent Builder)
-**Status:** PHASE 0 — DESIGN
+**Agent:** BROCK (Universal Build Engine)
+**Status:** ACTIVE — Universal Mode
 **Built by:** MEWY
-**Date:** 2026-04-25
+**Date:** 2026-04-26
 
 ---
 
 ## What It Is
 
-BROCK is an agent builder. Given a design brief, BROCK produces a fully working Hermes agent that passes the Agent Build Checklist v1.2. BROCK's output is sellable quality — a complete agent with SOUL, SPEC, processors, skills, database, and run.py.
+BROCK is EMVY's universal build engine. It builds anything EMVY needs to deliver client work and run operations. Four build types: Agents, Web Apps, Automations, Systems.
+
+Given a build brief, BROCK produces a fully working deliverable that passes quality gates.
 
 ---
 
@@ -16,144 +18,139 @@ BROCK is an agent builder. Given a design brief, BROCK produces a fully working 
 
 ```
 ~/.hermes/agents/brock/
-├── SOUL.md                       ← Identity + process
-├── SPEC.md                       ← This file
+├── SOUL.md                        ← Identity + process
+├── SPEC.md                        ← This file
 ├── skills/
-│   └── build-agent-skill.md     ← Build methodology + checklist
+│   └── build-skill.md            ← Universal build methodology + checklist
+├── patterns/
+│   ├── agent-pattern.md          ← Type 1: Agent architecture patterns
+│   ├── webapp-pattern.md         ← Type 2: Web app architecture patterns
+│   ├── automation-pattern.md     ← Type 3: Automation architecture patterns
+│   └── system-pattern.md         ← Type 4: System architecture patterns
 ├── agents/
-│   └── judge.py                 ← Quality evaluation (passes Go-Live gates?)
+│   └── judge.py                  ← Quality evaluation (build-type-specific gates)
 ├── processors/
 │   ├── brief_parser.py          ← Parses build brief from MEWY
-│   ├── soul_writer.py           ← Writes SOUL.md from brief
-│   ├── spec_writer.py           ← Writes SPEC.md from brief + research
+│   ├── spec_writer.py            ← Writes SPEC.md from brief + research
 │   ├── file_builder.py          ← Creates directory structure + files
-│   ├── skill_builder.py         ← Creates skill files from skill list
-│   └── db_builder.py            ← Creates database schema
+│   ├── agent_builder.py          ← Type 1: Agent-specific builder
+│   ├── web_builder.py            ← Type 2: Web app builder (Next.js)
+│   ├── automation_builder.py      ← Type 3: Automation builder
+│   ├── system_builder.py         ← Type 4: System builder
+│   └── db_builder.py             ← Creates database schema
 ├── database/
-│   └── brock.db                 ← Agent registry, build history
-└── run.py                       ← Entry point: build agent from brief
+│   └── brock.db                  ← Build registry, build history
+└── run.py                        ← Entry point
 ```
 
 ---
 
-## How It Works
+## Build Types
 
-### Input: Build Brief
+### Type 1 — Agents
+**What:** Hermes agent profiles (SOUL.md, SPEC.md, processors, skills, run.py)
+**Trigger:** `brock build:agent [name] --brief path/to/brief.md`
+**Output:** `~/.hermes/agents/[name]/`
+**Quality gates:** SOUL complete, SPEC complete, all skills loadable, run.py executes, database initializes
 
-MEWY sends BROCK a brief containing:
+### Type 2 — Web Apps
+**What:** Next.js full-stack apps, landing pages, dashboards
+**Trigger:** `brock build:web [name] --brief path/to/brief.md`
+**Output:** `~/hermes/builds/web/[name]/`
+**Quality gates:** `npm run build` passes, all pages render, API routes respond, Supabase wired
+
+### Type 3 — Automations
+**What:** Python scripts, n8n workflows, API integrations, data pipelines
+**Trigger:** `brock build:automation [name] --brief path/to/brief.md`
+**Output:** `~/hermes/builds/automation/[name]/`
+**Quality gates:** Runs without error, handles errors gracefully, no hardcoded credentials
+
+### Type 4 — Systems
+**What:** Supabase schemas, infrastructure setups, Chrome extensions, multi-component architectures
+**Trigger:** `brock build:system [name] --brief path/to/brief.md`
+**Output:** `~/hermes/builds/system/[name]/`
+**Quality gates:** Architecture documented, all connections tested, migration path defined
+
+---
+
+## Build Brief Format
+
 ```yaml
-agent_name: "CALLEE"  # or PRISM, CONN, etc.
-domain: "voice discovery agent for EMVY"
-voice_direction: "warm, professional, curious"
-pipeline_position: "after SLATE, before CONN"
-trigger: "VAPI call completion"
+build_name: "emvy-audit-report-generator"
+build_type: "automation"  # agent | web | automation | system
+summary: "Generates PDF audit reports from EMVY audit data"
+trigger: "cron daily 6am"  # or webhook, event, manual
+inputs:
+  - audit_id from Supabase
+outputs:
+  - PDF saved to Supabase Storage
+  - Link stored in audit record
 required_skills:
-  - vapi-integration-skill
-  - discovery-question-skill
-required_processors:
-  - call_notes_processor
-  - supabase_writer
-optional_notes: "inherits Supabase schema from EMVY stack"
-```
-
-### Output: Complete Agent Folder
-
-BROCK produces at `~/.hermes/agents/[agent-name]/`:
-```
-├── SOUL.md
-├── SPEC.md
-├── config/
-│   └── agent.yaml
-├── database/
-│   ├── schema.sql
-│   └── [agent].db (initialized)
-├── skills/
-│   ├── [skill-1].md
-│   └── [skill-2].md
-├── processors/
-│   ├── __init__.py
-│   ├── core.py
-│   └── [processor-1].py
-├── agents/
-│   └── judge.py
-└── run.py
+  - supabase-client
+  - pdf-generation
+optional_notes: "Uses EMVY brand template"
 ```
 
 ---
 
-## Deep Research Step (Checklist Step 0)
+## Deep Research Step (Step 0 — Non-Negotiable)
 
 Before writing any code, BROCK must:
 
-1. **Search vault for similar agents:** `~/.hermes/agents/*/`
-2. **Search web for production agents in same space:**
-   - GitHub repos with stars > 5k
-   - Open-source agents with documentation
+1. **Search vault for existing similar builds:** `~/.hermes/builds/*/` and `~/.hermes/agents/*/`
+2. **Search web for production examples:**
+   - GitHub repos with stars > 1k for the relevant build type
+   - Open-source projects with documentation
+   - Relevant libraries and their patterns
 3. **Extract patterns:**
-   - Architecture decisions
-   - Prompt patterns that work
-   - Failure modes documented
+   - Architecture decisions that work
+   - Common failure modes
+   - API patterns and conventions
 4. **Write Research Summary** in SPEC.md
 
 ---
 
-## Skills Architecture
+## Quality Gates
 
-Every agent BROCK builds must follow Skills Architecture (Checklist Step 5b):
+### Agent Gates (Type 1)
+1. SOUL.md complete — identity, voice, rules, key files documented
+2. SPEC.md complete — architecture, data flow, API list, build phases
+3. All skills created — skill files in skills/
+4. Database schema — SQLite schema written and valid
+5. run.py executes — `python run.py` at minimum imports without error
+6. Processors import — `from processors import *` works
+7. Skills load — `load_skill("x")` returns content
 
-**Skill types to create:**
-- **Platform skills** — for any platform the agent interacts with
-- **Process skills** — for any repeatable workflow
-- **Knowledge skills** — for domain expertise
-- **Integration skills** — for API wiring
+### Web App Gates (Type 2)
+1. `npm run build` passes without errors
+2. All pages render without errors
+3. All API routes respond correctly
+4. Supabase connection verified
+5. Environment variables documented
+6. No hardcoded credentials
 
-**Skill file format:**
-```
-# [Skill Name]
-**For:** [Agent Name]
-**Purpose:** [What this skill encodes]
-**Last updated:** [Date]
+### Automation Gates (Type 3)
+1. Runs end-to-end without error
+2. Error handling in place (try/except, logging)
+3. No hardcoded credentials
+4. Trigger mechanism documented and tested
+5. Logging output clear
 
----
-[Content — rules, patterns, knowledge]
----
-*Update this skill when [domain] changes.*
-```
-
-**BROCK must include skill loading in every agent it builds:**
-```python
-def load_skill(skill_name: str) -> str:
-    """Load skill content from skills/ directory."""
-    path = Path(__file__).parent / "skills" / f"{skill_name}.md"
-    return path.read_text()
-```
-
----
-
-## Quality Gates (from Evaluation Rubric)
-
-Before delivery, BROCK verifies:
-
-1. **SOUL.md complete** — identity, voice, rules, key files
-2. **SPEC.md complete** — architecture, data flow, API list, build phases
-3. **All skills created** — skill files in skills/
-4. **Database schema** — SQLite schema written and valid
-5. **run.py executes** — `python run.py` at minimum imports without error
-6. **Processors import** — `from processors import *` works
-7. **Skills load** — `load_skill("x")` returns content
+### System Gates (Type 4)
+1. Architecture diagram in SPEC.md
+2. All API connections documented and tested
+3. Migration steps documented (if DB involved)
+4. Deployment process documented
+5. Monitoring/logging in place
 
 ---
 
-## BROCK Self-Improvement Loop
+## Self-Improvement Loop
 
-BROCK needs to get better over time. The self-improvement loop:
-
-1. **Track build outcomes:** When MEWY deploys an agent BROCK built, log it
-2. **Track issues:** When an agent has problems in production, log what went wrong
-3. **Periodic review:** Every 5 builds, BROCK reviews issues and updates `build-agent-skill.md`
-4. **Pattern library:** BROCK maintains `patterns/[domain-type].md` for common agent architectures
-
-This means BROCK's skills evolve — the build methodology gets better with each build.
+1. **Track build outcomes:** When MEWY deploys a build BROCK made, log it
+2. **Track issues:** When a build has problems in production, log what went wrong
+3. **Periodic review:** Every 5 builds, BROCK reviews issues and updates build-skill.md
+4. **Pattern library:** BROCK maintains type-specific patterns that evolve with each build
 
 ---
 
@@ -167,50 +164,34 @@ This means BROCK's skills evolve — the build methodology gets better with each
 
 | Phase | What | Done When |
 |-------|------|-----------|
-| 0 — Acknowledge | Parse brief, confirm scope, ask clarifying Qs | Brief understood |
-| 1 — Deep Research | Find similar agents, extract patterns | Research summary in SPEC |
-| 2 — Core | SOUL + SPEC + directory structure | All three files written |
-| 3 — Processors | Build all processors + skill loading | All processors import |
-| 4 — Skills | Create all skill files | All skills loadable |
-| 5 — Database | Schema + DB init | DB initializes without error |
-| 6 — Integration | run.py + wire everything | run.py executes cleanly |
-| 7 — Quality Gates | Run Go-Live checklist | All gates pass |
-| 8 — Deliver | Report to MEWY | Files delivered |
+| 0 — Acknowledge | Parse brief, confirm type, ask clarifying Qs | Brief understood |
+| 1 — Deep Research | Find similar builds, extract patterns | Research summary in SPEC |
+| 2 — Core Architecture | SPEC.md, directory structure, data flow | Architecture documented |
+| 3 — Build | Write code (type-specific) | All files created |
+| 4 — Quality Gates | Run appropriate gates for build type | All gates pass |
+| 5 — Deliver | Report to MEWY | Files delivered |
 
 ---
 
-## Gap Analysis (Internal)
+## Gap Analysis
 
-*This section documents what BROCK needs but doesn't yet have built.*
+### Known Gaps (2026-04-26)
 
-### Known Gaps
+1. **Type 2-4 builders not yet built** — brief_parser, spec_writer, web_builder, automation_builder, system_builder exist only as stubs
+2. **No pattern files for Type 2-4** — patterns/ directory only has agent-patterns
+3. **No judge.py for Type 2-4** — quality gates are defined but not automated
+4. **No build registry** — brock.db exists but schema may not cover all build types
+5. **No run.py update** — current run.py only handles agent builds
 
-1. **No self-improvement loop implemented** — agent registry + issue tracking not yet built
-2. **No pattern library** — no `patterns/` directory for architecture reuse
-3. **Judge (quality gates) is basic** — `agents/judge.py` exists but needs full Go-Live gate implementation
-4. **No web UI interface** — BROCK is CLI-only. The web UI would let non-technical users configure agents without MEWY writing briefs.
+### Priority Fixes
 
-### What's Missing for "Sellable Quality"
-
-For BROCK to be a product that can be sold:
-
-1. **Web UI** — Configurator that generates brief from form inputs (highest priority)
-2. **Documentation generator** — Auto-generate README.md + API docs from SPEC.md
-3. **Demo mode** — Show a build happening in real-time (trust builder)
-4. **Template library** — Pre-built agent templates (sales agent, content agent, etc.) users can customize
-5. **Version control** — Track agent versions, rollback capability
-6. **Monitoring dashboard** — Show agents built, build success rate, time to build
-
-### Gap Priority for BROCK v1
-
-| Gap | Priority | Notes |
-|-----|----------|-------|
-| Web UI | High | Makes it sellable, not just usable |
-| Self-improvement loop | Medium | Makes BROCK get better over time |
-| Pattern library | Medium | Faster builds, better architecture |
-| Documentation generator | Medium | Professional product feel |
-| Template library | Low | Can ship v1 without it |
+| Gap | Priority | Status |
+|-----|----------|--------|
+| Add Type 2-4 patterns | High | Pending |
+| Update run.py for universal builds | High | Pending |
+| Expand judge.py for Type 2-4 gates | Medium | Pending |
+| Update brock.db schema for all build types | Medium | Pending |
 
 ---
 
-*Last updated: 2026-04-25*
+*Last updated: 2026-04-26*
